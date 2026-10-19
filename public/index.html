@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кодовый Офис</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0d1117; --bg-2: #161b22; --bg-3: #1c2128;
+    --border: #30363d; --border-soft: #21262d;
+    --text: #e6edf3; --text-dim: #8b949e;
+    --accent: #2f81f7; --accent-2: #1f6feb;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149; --purple: #bc8cff;
+  }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg); color: var(--text);
+    overflow: hidden; display: flex; flex-direction: column;
+    font-size: 14px; -webkit-font-smoothing: antialiased;
+  }
+  header {
+    height: 52px; background: var(--bg-2); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 16px; gap: 10px; flex-shrink: 0;
+  }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; }
+  .logo-icon {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    display: grid; place-items: center; font-size: 14px;
+    box-shadow: 0 0 12px rgba(47,129,247,0.4);
+  }
+  .party-pill {
+    display: flex; align-items: center; gap: 8px; padding: 5px 12px;
+    background: var(--bg-3); border: 1px solid var(--border); border-radius: 20px;
+    font-size: 12px; color: var(--text-dim); transition: all 0.2s;
+  }
+  .party-pill.on { color: var(--green); border-color: rgba(63,185,80,0.4); background: rgba(63,185,80,0.08); }
+  .party-pill .dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--text-dim); transition: background 0.2s;
+  }
+  .party-pill.on .dot { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .spacer { flex: 1; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
+    border-radius: 7px; border: 1px solid var(--border); background: var(--bg-3);
+    color: var(--text); font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn:hover { background: var(--border); border-color: #484f58; transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-2); border-color: var(--accent-2); box-shadow: 0 0 14px rgba(47,129,247,0.4); }
+  .main { flex: 1; display: flex; overflow: hidden; }
+  .sidebar {
+    width: 250px; background: var(--bg-2); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  .sidebar-head { padding: 14px 14px 8px; display: flex; justify-content: space-between; align-items: center; }
+  .sidebar-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); }
+  .icon-btn {
+    width: 26px; height: 26px; display: grid; place-items: center; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--bg-3); color: var(--text-dim);
+    cursor: pointer; font-size: 16px; line-height: 1; transition: all 0.15s;
+  }
+  .icon-btn:hover { color: var(--text); border-color: var(--accent); background: rgba(47,129,247,0.12); }
+  .file-list { flex: 1; overflow-y: auto; padding: 4px 8px 12px; }
+  .file-list::-webkit-scrollbar { width: 8px; }
+  .file-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .file-item {
+    display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+    border-radius: 6px; cursor: pointer; font-size: 13px; margin-bottom: 1px;
+    transition: background 0.1s; position: relative;
+  }
+  .file-item:hover { background: var(--bg-3); }
+  .file-item.active { background: rgba(47,129,247,0.15); color: var(--text); }
+  .file-item.active::before {
+    content: ''; position: absolute; left: -8px; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 16px; background: var(--accent); border-radius: 2px;
+  }
+  .file-icon { font-size: 13px; flex-shrink: 0; }
+  .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-del {
+    opacity: 0; color: var(--text-dim); font-size: 14px; cursor: pointer;
+    padding: 2px 4px; border-radius: 4px; transition: all 0.15s; flex-shrink: 0;
+  }
+  .file-item:hover .file-del { opacity: 1; }
+  .file-del:hover { color: var(--red); background: rgba(248,81,73,0.15); }
+  .editor-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+  .tabs-bar {
+    height: 40px; background: var(--bg-2); border-bottom: 1px solid var(--border);
+    display: flex; overflow-x: auto; flex-shrink: 0;
+  }
+  .tabs-bar::-webkit-scrollbar { height: 4px; }
+  .tabs-bar::-webkit-scrollbar-thumb { background: var(--border); }
+  .tab {
+    display: flex; align-items: center; gap: 8px; padding: 0 14px; font-size: 13px;
+    cursor: pointer; border-right: 1px solid var(--border-soft); color: var(--text-dim);
+    background: var(--bg-2); white-space: nowrap; transition: all 0.15s; min-width: 0;
+  }
+  .tab:hover { background: var(--bg-3); color: var(--text); }
+  .tab.active { background: var(--bg); color: var(--text); border-top: 2px solid var(--accent); }
+  .tab .tab-close {
+    color: var(--text-dim); font-size: 15px; padding: 2px 3px;
+    border-radius: 4px; transition: all 0.15s; line-height: 1;
+  }
+  .tab .tab-close:hover { color: var(--red); background: rgba(248,81,73,0.15); }
+  .editor-wrapper {
+    flex: 1; display: flex; overflow: hidden; background: var(--bg); position: relative; min-height: 0;
+  }
+  .line-numbers {
+    width: 56px; padding: 16px 10px 16px 0; text-align: right; color: #484f58;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 22px;
+    user-select: none; overflow: hidden; flex-shrink: 0; background: var(--bg);
+  }
+  textarea.code-editor {
+    flex: 1; background: var(--bg); color: #c9d1d9; border: none; outline: none;
+    resize: none; font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    line-height: 22px; padding: 16px 16px 16px 8px; tab-size: 2;
+    white-space: pre; overflow: auto;
+  }
+  textarea.code-editor::-webkit-scrollbar { width: 12px; height: 12px; }
+  textarea.code-editor::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; border: 3px solid var(--bg); }
+  textarea.code-editor::selection { background: rgba(47,129,247,0.35); }
+  .empty-state {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 16px; color: var(--text-dim);
+  }
+  .empty-icon { font-size: 48px; opacity: 0.4; }
+  .statusbar {
+    height: 26px; background: var(--bg-2); border-top: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 14px; font-size: 12px;
+    color: var(--text-dim); gap: 18px; flex-shrink: 0;
+  }
+  .status-item { display: flex; align-items: center; gap: 5px; }
+  .status-item .accent { color: var(--accent); }
+  .status-item .green { color: var(--green); }
+  .status-item .yellow { color: var(--yellow); }
+
+  .output-panel {
+    height: 0; background: var(--bg-2); border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow: hidden;
+    transition: height 0.2s ease-out; flex-shrink: 0;
+  }
+  .output-panel.open { height: 240px; }
+  .output-panel.maximized { height: 60vh; }
+  .output-head {
+    height: 32px; display: flex; align-items: center; padding: 0 12px; gap: 8px;
+    background: var(--bg-3); border-bottom: 1px solid var(--border-soft);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-dim); flex-shrink: 0;
+  }
+  .output-head .out-lang { color: var(--green); font-weight: 600; font-size: 11px; }
+  .output-head .spacer { flex: 1; }
+  .out-btn {
+    background: transparent; border: none; color: var(--text-dim);
+    cursor: pointer; padding: 4px 8px; border-radius: 4px;
+    font-size: 12px; transition: all 0.15s;
+  }
+  .out-btn:hover { background: var(--border); color: var(--text); }
+  .output-body {
+    flex: 1; overflow: auto; padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    line-height: 1.6; color: #c9d1d9; white-space: pre-wrap; word-break: break-word;
+  }
+  .output-body::-webkit-scrollbar { width: 10px; }
+  .output-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+  .output-body iframe { width: 100%; height: 100%; border: none; background: white; border-radius: 4px; }
+  .output-empty { color: var(--text-dim); font-style: italic; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; z-index: 1000;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; width: 440px; max-width: 90vw; max-height: 80vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .modal-sub { font-size: 12px; color: var(--text-dim); margin-bottom: 18px; }
+  .modal-input {
+    width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 7px; font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; outline: none; transition: border-color 0.15s; margin-bottom: 16px;
+  }
+  .modal-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47,129,247,0.15); }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+  .setting-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; border-bottom: 1px solid var(--border-soft);
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-label { font-size: 13px; font-weight: 500; }
+  .setting-desc { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .toggle {
+    width: 40px; height: 22px; border-radius: 11px; background: var(--border);
+    cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px;
+    border-radius: 50%; background: white; transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(18px); }
+  .glory-item {
+    display: flex; flex-direction: column; gap: 8px; padding: 14px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: 10px; transition: all 0.15s;
+  }
+  .glory-item:hover { border-color: var(--accent); }
+  .glory-head { display: flex; align-items: center; gap: 12px; }
+  .glory-icon { font-size: 22px; }
+  .glory-title { font-size: 14px; font-weight: 600; }
+  .glory-meta { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .glory-code {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #c9d1d9;
+    background: #0d1117; padding: 10px; border-radius: 6px; max-height: 120px;
+    overflow: auto; white-space: pre-wrap; border: 1px solid var(--border-soft);
+  }
+  .glory-actions { display: flex; gap: 8px; margin-top: 4px; }
+  .toast-container {
+    position: fixed; bottom: 40px; right: 20px; display: flex;
+    flex-direction: column; gap: 8px; z-index: 2000; pointer-events: none;
+  }
+  .toast {
+    background: var(--bg-2); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    padding: 11px 16px; border-radius: 8px; font-size: 13px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5); animation: slideIn 0.25s ease-out;
+    max-width: 360px; pointer-events: auto;
+  }
+  .toast.success { border-left-color: var(--green); }
+  .toast.error { border-left-color: var(--red); }
+  .toast.loading { border-left-color: var(--yellow); }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><div class="logo-icon">⚡</div><span>Кодовый Офис</span></div>
+  <div class="party-pill" id="partyPill"><span class="dot"></span><span id="partyStatus">Пати не активно</span></div>
+  <div class="spacer"></div>
+  <button class="btn" id="btnParty">👥 Пати</button>
+  <button class="btn" id="btnGlory">🏆 Зал славы</button>
+  <button class="btn" id="btnPublish">📤 Опубликовать</button>
+  <button class="btn btn-primary" id="btnRun">▶ Запустить</button>
+</header>
+
+<div class="main">
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <span class="sidebar-title">Проводник</span>
+      <button class="icon-btn" id="btnNewFile" title="Новый файл">＋</button>
+    </div>
+    <div class="file-list" id="fileList"></div>
+  </aside>
+  <section class="editor-area">
+    <div class="tabs-bar" id="tabsBar"></div>
+    <div class="editor-wrapper" id="editorWrapper"></div>
+    <div class="output-panel" id="outputPanel">
+      <div class="output-head">
+        <span>Вывод</span>
+        <span class="out-lang" id="outLang"></span>
+        <div class="spacer"></div>
+        <button class="out-btn" id="btnClearOut" title="Очистить">🗑 Очистить</button>
+        <button class="out-btn" id="btnMaxOut" title="Развернуть">⛶</button>
+        <button class="out-btn" id="btnCloseOut" title="Свернуть">✕</button>
+      </div>
+      <div class="output-body" id="outputBody">
+        <span class="output-empty">Здесь появится результат выполнения…</span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="statusbar">
+  <div class="status-item"><span class="accent" id="statusLang">—</span></div>
+  <div class="status-item" id="statusPos">Стр 1, Кол 1</div>
+  <div class="spacer"></div>
+  <div class="status-item" id="statusRuntime"><span class="green">●</span> Готов</div>
+  <div class="status-item" id="statusUsers">👤 1</div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">Новый файл</div>
+    <div class="modal-sub">Введите имя с расширением — app.js, main.py, index.html</div>
+    <input type="text" class="modal-input" id="fileNameInput" placeholder="main.py" autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn" id="modalCancel">Отмена</button>
+      <button class="btn btn-primary" id="modalCreate">Создать</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="gloryModal">
+  <div class="modal" style="width: 640px;">
+    <div class="modal-title">🏆 Зал славы — опубликованные работы</div>
+    <div class="modal-sub">Работы, опубликованные участниками. Нажмите «Открыть», чтобы загрузить код к себе.</div>
+    <div id="gloryList"><span class="output-empty">Загрузка…</span></div>
+    <div class="modal-actions"><button class="btn" id="gloryClose">Закрыть</button></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  const STORAGE_KEY = 'codeoffice_files_v5';
+  const LANG_MAP = { js: 'JavaScript', ts: 'TypeScript', html: 'HTML', css: 'CSS', py: 'Python', json: 'JSON', md: 'Markdown', txt: 'Text' };
+  const ICONS = { js: '🟨', ts: '🟦', html: '🟧', css: '🟪', py: '🐍', json: '📋', md: '📝', txt: '📄' };
+
+  let files = {};
+  let openTabs = [];
+  let activeFile = null;
+  let isParty = false;
+  let ws = null;
+  let partyId = 'u-' + Math.random().toString(36).slice(2, 8);
+  let remoteUsers = 1;
+  let pyodide = null;
+  let pyodideLoading = false;
+  let pyodideReady = false;
+  let settings = { autosave: true };
+  let applyingRemote = false; // чтобы не отправлять обратно то, что пришло от других
+
+  const $ = (id) => document.getElementById(id);
+
+  function loadFiles() {
+    try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) files = JSON.parse(raw) || {}; } catch(e) { files = {}; }
+    if (Object.keys(files).length === 0) {
+      files['main.py'] = '# Python работает через Pyodide\n\nimport sys\nprint("Python", sys.version.split()[0])\nprint("Привет!")\n\nfor i in range(1, 4):\n    print(f"{i}^2 = {i*i}")\n';
+      files['main.js'] = '// JavaScript нативно в браузере\nconsole.log("Привет, мир!");\nconsole.log("2 + 2 =", 2 + 2);\n';
+      files['index.html'] = '<!DOCTYPE html>\n<html><head><meta charset="UTF-8"><title>Тест</title></head>\n<body style="font-family:sans-serif;padding:40px;"><h1>HTML запущен!</h1></body></html>\n';
+      saveFiles();
+    }
+  }
+  function saveFiles() {
+    if (!settings.autosave) return;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(files)); } catch(e) {}
+  }
+
+  function ext(name) { const i = name.lastIndexOf('.'); return i >= 0 ? name.slice(i+1).toLowerCase() : ''; }
+  function langName(name) { return LANG_MAP[ext(name)] || ext(name).toUpperCase() || 'Text'; }
+  function fileIcon(name) { return ICONS[ext(name)] || '📄'; }
+  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function toast(msg, type) {
+    const container = $('toastContainer');
+    const t = document.createElement('div');
+    t.className = 'toast' + (type ? ' ' + type : '');
+    t.textContent = msg;
+    container.appendChild(t);
+    setTimeout(() => {
+      t.style.transition = 'opacity 0.25s, transform 0.25s';
+      t.style.opacity = '0'; t.style.transform = 'translateX(40px)';
+      setTimeout(() => t.remove(), 250);
+    }, 3500);
+  }
+
+  // ========== ПАНЕЛЬ ВЫВОДА ==========
+  function openOutputPanel(lang) {
+    $('outputPanel').classList.add('open');
+    $('outLang').textContent = lang || '';
+  }
+  function closeOutputPanel() {
+    $('outputPanel').classList.remove('open', 'maximized');
+    $('btnMaxOut').textContent = '⛶';
+  }
+  function toggleMaxOutput() {
+    const panel = $('outputPanel');
+    panel.classList.toggle('maximized');
+    $('btnMaxOut').textContent = panel.classList.contains('maximized') ? '⤡' : '⛶';
+  }
+  function clearOutput() {
+    $('outputBody').innerHTML = '<span class="output-empty">Здесь появится результат выполнения…</span>';
+  }
+  function showOutput(text, lang, isError) {
+    openOutputPanel(lang);
+    const body = $('outputBody');
+    body.innerHTML = '';
+    if (isError) {
+      const errDiv = document.createElement('div');
+      errDiv.style.color = 'var(--red)';
+      errDiv.textContent = text;
+      body.appendChild(errDiv);
+    } else {
+      body.textContent = text || '(пусто — программа ничего не вывела)';
+    }
+    body.scrollTop = body.scrollHeight;
+  }
+  function showOutputHtml(html) {
+    openOutputPanel('HTML');
+    const body = $('outputBody');
+    body.innerHTML = '';
+    const iframe = document.createElement('iframe');
+    iframe.sandbox = 'allow-scripts';
+    iframe.srcdoc = html;
+    body.appendChild(iframe);
+  }
+
+  function renderFileList() {
+    const list = $('fileList'); list.innerHTML = '';
+    const names = Object.keys(files).sort();
+    if (names.length === 0) { list.innerHTML = '<div style="padding:20px;color:#8b949e;font-size:12px;text-align:center;">Нет файлов</div>'; return; }
+    names.forEach(name => {
+      const item = document.createElement('div');
+      item.className = 'file-item' + (name === activeFile ? ' active' : '');
+      item.innerHTML = `<span class="file-icon">${fileIcon(name)}</span><span class="file-name">${escapeHtml(name)}</span><span class="file-del">✕</span>`;
+      item.addEventListener('click', (e) => {
+        if (e.target.classList.contains('file-del')) { e.stopPropagation(); deleteFile(name); } else openFile(name);
+      });
+      list.appendChild(item);
+    });
+  }
+
+  function renderTabs() {
+    const bar = $('tabsBar'); bar.innerHTML = '';
+    openTabs.forEach(name => {
+      const tab = document.createElement('div');
+      tab.className = 'tab' + (name === activeFile ? ' active' : '');
+      tab.innerHTML = `<span>${fileIcon(name)}</span><span>${escapeHtml(name)}</span><span class="tab-close">✕</span>`;
+      tab.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tab-close')) { e.stopPropagation(); closeFile(name); } else openFile(name);
+      });
+      bar.appendChild(tab);
+    });
+  }
+
+  let textarea, lineNumbers;
+
+  function buildEditor() {
+    const wrapper = $('editorWrapper'); wrapper.innerHTML = '';
+    const ln = document.createElement('div'); ln.className = 'line-numbers'; ln.id = 'lineNumbers';
+    const ta = document.createElement('textarea'); ta.className = 'code-editor'; ta.spellcheck = false;
+    wrapper.appendChild(ln); wrapper.appendChild(ta);
+    textarea = ta; lineNumbers = ln;
+    ta.addEventListener('input', onEditorInput);
+    ta.addEventListener('scroll', syncScroll);
+    ta.addEventListener('keydown', onEditorKeydown);
+    ta.addEventListener('click', updateCursorPos);
+    ta.addEventListener('keyup', updateCursorPos);
+  }
+
+  function showEmpty() {
+    $('editorWrapper').innerHTML = `<div class="empty-state"><div class="empty-icon">📄</div><div>Файл не открыт</div><button class="btn btn-primary" id="btnEmptyNew">＋ Создать файл</button></div>`;
+    $('btnEmptyNew').addEventListener('click', openCreateModal);
+    $('statusLang').textContent = '—'; $('statusPos').textContent = '';
+  }
+
+  function openFile(name) {
+    if (!files.hasOwnProperty(name)) return;
+    activeFile = name;
+    if (!openTabs.includes(name)) openTabs.push(name);
+    buildEditor();
+    textarea.value = files[name];
+    $('statusLang').textContent = langName(name);
+    updateLineNumbers(); updateCursorPos();
+    renderFileList(); renderTabs();
+    setTimeout(() => textarea.focus(), 0);
+    if (isParty && ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'open', file: name, user: partyId }));
+    }
+  }
+
+  function closeFile(name) {
+    openTabs = openTabs.filter(f => f !== name);
+    if (activeFile === name) {
+      activeFile = openTabs.length ? openTabs[openTabs.length - 1] : null;
+      if (activeFile) openFile(activeFile); else showEmpty();
+    }
+    renderTabs(); renderFileList();
+  }
+
+  function onEditorInput() {
+    if (!activeFile) return;
+    files[activeFile] = textarea.value;
+    saveFiles(); updateLineNumbers();
+    if (isParty && ws && ws.readyState === WebSocket.OPEN && !applyingRemote) {
+      ws.send(JSON.stringify({ type: 'edit', file: activeFile, content: textarea.value, user: partyId }));
+    }
+  }
+
+  function onEditorKeydown(e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = textarea.selectionStart, end = textarea.selectionEnd;
+      textarea.value = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end);
+      textarea.selectionStart = textarea.selectionEnd = start + 2;
+      onEditorInput();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveFiles(); toast('Сохранено', 'success'); }
+  }
+
+  function updateLineNumbers() {
+    if (!textarea || !lineNumbers) return;
+    const count = textarea.value.split('\n').length;
+    let html = ''; for (let i = 1; i <= count; i++) html += i + '<br>';
+    lineNumbers.innerHTML = html; lineNumbers.scrollTop = textarea.scrollTop;
+  }
+  function syncScroll() { if (lineNumbers) lineNumbers.scrollTop = textarea.scrollTop; }
+  function updateCursorPos() {
+    if (!textarea) return;
+    const pos = textarea.selectionStart, before = textarea.value.substring(0, pos);
+    $('statusPos').textContent = `Стр ${before.split('\n').length}, Кол ${pos - before.lastIndexOf('\n')}`;
+  }
+
+  function openCreateModal() { $('modal').classList.add('show'); $('fileNameInput').value = ''; setTimeout(() => $('fileNameInput').focus(), 50); }
+  function closeCreateModal() { $('modal').classList.remove('show'); }
+  function createFile() {
+    let name = $('fileNameInput').value.trim();
+    if (!name) { toast('Введите имя', 'error'); return; }
+    name = name.replace(/[\/\\:*?"<>|]/g, '');
+    if (!name) { toast('Недопустимое имя', 'error'); return; }
+    if (files.hasOwnProperty(name)) { toast('Файл уже существует', 'error'); return; }
+    files[name] = ''; saveFiles(); closeCreateModal(); openFile(name);
+    toast(`Создан: ${name}`, 'success');
+  }
+  function deleteFile(name) {
+    if (!confirm(`Удалить "${name}"?`)) return;
+    delete files[name]; saveFiles();
+    openTabs = openTabs.filter(f => f !== name);
+    if (activeFile === name) {
+      activeFile = openTabs.length ? openTabs[openTabs.length - 1] : null;
+      if (activeFile) openFile(activeFile); else showEmpty();
+    }
+    renderFileList(); renderTabs(); toast(`Удалён: ${name}`, 'error');
+  }
+
+  // ========== PYODIDE ==========
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error('Не удалось загрузить ' + src));
+      document.head.appendChild(s);
+    });
+  }
+
+  async function ensurePyodideScript() {
+    if (typeof loadPyodide === 'function') return;
+    const cdns = [
+      'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js',
+      'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js',
+      'https://unpkg.com/pyodide@0.25.0/pyodide.js'
+    ];
+    let lastErr;
+    for (const url of cdns) {
+      try {
+        await loadScript(url);
+        if (typeof loadPyodide === 'function') return;
+      } catch(e) { lastErr = e; }
+    }
+    throw new Error('Pyodide не загрузился ни с одного CDN. ' + (lastErr ? lastErr.message : ''));
+  }
+
+  async function ensurePyodide() {
+    if (pyodideReady && pyodide) return pyodide;
+    if (pyodideLoading) { while (!pyodideReady && pyodideLoading) await new Promise(r => setTimeout(r, 200)); return pyodide; }
+    pyodideLoading = true;
+    $('statusRuntime').innerHTML = '<span class="yellow">●</span> Загрузка Python...';
+    openOutputPanel('Python');
+    $('outputBody').innerHTML = '<span class="output-empty">Загрузка среды Python (Pyodide ~6 МБ)…</span>';
+    try {
+      await ensurePyodideScript();
+      pyodide = await loadPyodide();
+      pyodideReady = true;
+      $('statusRuntime').innerHTML = '<span class="green">●</span> Python готов';
+      toast('Python готов', 'success');
+      return pyodide;
+    } catch (err) {
+      pyodideLoading = false;
+      $('statusRuntime').innerHTML = '<span style="color:var(--red)">●</span> Ошибка Python';
+      showOutput('Не удалось загрузить Pyodide: ' + err.message, 'Python', true);
+      throw err;
+    } finally { pyodideLoading = false; }
+  }
+
+  async function runCode() {
+    if (!activeFile) { toast('Откройте файл', 'error'); return; }
+    const code = files[activeFile];
+    const e = ext(activeFile);
+
+    if (e === 'html') {
+      showOutputHtml(code);
+      toast('HTML отрендерен в панели', 'success');
+      return;
+    }
+
+    if (e === 'js') {
+      const output = []; const origLog = console.log;
+      console.log = (...args) => output.push(args.map(a => { try { return typeof a === 'object' ? JSON.stringify(a) : String(a); } catch(err) { return String(a); } }).join(' '));
+      try { new Function(code)(); } catch (err) { console.log = origLog; showOutput('Ошибка: ' + err.message, 'JavaScript', true); return; }
+      console.log = origLog;
+      showOutput(output.join('\n') || '(пусто)', 'JavaScript');
+      return;
+    }
+
+    if (e === 'py') {
+      $('btnRun').disabled = true; $('btnRun').textContent = '⏳ Загрузка...';
+      try {
+        const py = await ensurePyodide();
+        const output = [];
+        // ВАЖНО: поддержка input() через prompt
+        py.setStdin({ stdin: () => prompt("Введите данные (Python input):") || "" });
+        py.setStdout({ batched: (s) => output.push(s) });
+        py.setStderr({ batched: (s) => output.push(s) });
+        try { py.runPython(code); } catch (err) { output.push('❌ ' + err.message); }
+        showOutput(output.join('\n') || '(пусто)', 'Python');
+      } catch (err) { /* уже показано */ }
+      finally { $('btnRun').disabled = false; $('btnRun').textContent = '▶ Запустить'; }
+      return;
+    }
+    showOutput(`Запуск ${langName(activeFile)} не поддерживается`, langName(activeFile), true);
+  }
+
+  // ========== ПАТИ через WebSocket ==========
+  function toggleParty() {
+    if (isParty) {
+      if (ws) { try { ws.close(); } catch(e) {} ws = null; }
+      isParty = false;
+      $('btnParty').textContent = '👥 Пати';
+      $('partyPill').classList.remove('on');
+      $('partyStatus').textContent = 'Пати не активно';
+      $('statusUsers').textContent = '👤 1';
+      toast('Вы вышли из пати');
+      return;
+    }
+
+    const roomId = prompt('ID комнаты (пусто = новая):') || 'room-' + Math.random().toString(36).slice(2, 8);
+    const userName = 'User-' + Math.random().toString(36).slice(2, 5);
+    const wsUrl = `wss://${window.location.host}/ws?room=${encodeURIComponent(roomId)}&name=${encodeURIComponent(userName)}`;
+
+    try { ws = new WebSocket(wsUrl); }
+    catch (e) { toast('Не удалось подключиться: ' + e.message, 'error'); return; }
+
+    ws.onopen = () => {
+      isParty = true;
+      $('btnParty').textContent = '⏹ Выйти';
+      $('partyPill').classList.add('on');
+      $('partyStatus').textContent = 'Пати: ' + roomId;
+      toast('Пати: ' + roomId, 'success');
+    };
+
+    ws.onmessage = (event) => {
+      let msg; try { msg = JSON.parse(event.data); } catch(e) { return; }
+      if (msg.type === 'edit' && files.hasOwnProperty(msg.file) && msg.user !== partyId) {
+        files[msg.file] = msg.content;
+        saveFiles();
+        if (msg.file === activeFile && textarea) {
+          applyingRemote = true;
+          const pos = textarea.selectionStart;
+          textarea.value = msg.content;
+          textarea.selectionStart = textarea.selectionEnd = Math.min(pos, msg.content.length);
+          updateLineNumbers();
+          applyingRemote = false;
+        }
+      }
+      if (msg.type === 'join') {
+        $('statusUsers').textContent = '👤 ' + (msg.count + 1);
+        toast(`${msg.user} присоединился`);
+      }
+      if (msg.type === 'leave') {
+        $('statusUsers').textContent = '👤 ' + (msg.count + 1);
+      }
+      if (msg.type === 'open' && msg.file) {
+        toast(`Участник открыл ${msg.file}`);
+      }
+    };
+
+    ws.onerror = () => { toast('Ошибка WebSocket', 'error'); };
+
+    ws.onclose = () => {
+      if (isParty) {
+        isParty = false;
+        $('btnParty').textContent = '👥 Пати';
+        $('partyPill').classList.remove('on');
+        $('partyStatus').textContent = 'Соединение потеряно';
+        toast('Соединение с пати потеряно', 'error');
+      }
+    };
+  }
+
+  // ========== ПУБЛИКАЦИЯ И ЗАЛ СЛАВЫ ==========
+  async function publishFile() {
+    if (!activeFile) { toast('Откройте файл', 'error'); return; }
+    const title = prompt('Название работы:', activeFile);
+    if (!title) return;
+    const author = prompt('Ваше имя:', 'Аноним') || 'Аноним';
+
+    try {
+      const res = await fetch('/api/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, author, code: files[activeFile], language: ext(activeFile) })
+      });
+      const data = await res.json();
+      if (data.success) toast('Опубликовано!', 'success');
+      else toast('Ошибка: ' + (data.error || 'неизвестно'), 'error');
+    } catch (e) {
+      toast('Ошибка публикации: ' + e.message, 'error');
+    }
+  }
+
+  async function openGlory() {
+    $('gloryModal').classList.add('show');
+    const list = $('gloryList');
+    list.innerHTML = '<span class="output-empty">Загрузка…</span>';
+    try {
+      const res = await fetch('/api/projects');
+      const projects = await res.json();
+      list.innerHTML = '';
+      if (!projects.length) {
+        list.innerHTML = '<span class="output-empty">Пока никто ничего не опубликовал. Будьте первым!</span>';
+        return;
+      }
+      projects.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'glory-item';
+        item.innerHTML = `
+          <div class="glory-head">
+            <span class="glory-icon">${fileIcon('x.' + p.language)}</span>
+            <div style="flex:1">
+              <div class="glory-title">${escapeHtml(p.title)}</div>
+              <div class="glory-meta">от ${escapeHtml(p.author)} • ${new Date(p.publishedAt).toLocaleString('ru')} • ${p.language}</div>
+            </div>
+          </div>
+          <pre class="glory-code">${escapeHtml(p.code.slice(0, 400))}${p.code.length > 400 ? '\n…' : ''}</pre>
+          <div class="glory-actions">
+            <button class="btn btn-sm" data-open="${p.id}">Открыть у себя</button>
+          </div>
+        `;
+        item.querySelector('[data-open]').addEventListener('click', () => {
+          const newName = p.title.replace(/[\/\\:*?"<>|]/g, '') + '.' + (p.language || 'txt');
+          let finalName = newName;
+          let n = 1;
+          while (files.hasOwnProperty(finalName)) { finalName = newName.replace(/(\.\w+)$/, `-${n}$1`); n++; }
+          files[finalName] = p.code;
+          saveFiles();
+          closeGlory();
+          openFile(finalName);
+          toast('Загружено: ' + finalName, 'success');
+        });
+        list.appendChild(item);
+      });
+    } catch (e) {
+      list.innerHTML = '<span class="output-empty">Ошибка загрузки: ' + escapeHtml(e.message) + '</span>';
+    }
+  }
+  function closeGlory() { $('gloryModal').classList.remove('show'); }
+
+  function init() {
+    loadFiles(); renderFileList(); renderTabs();
+    const first = Object.keys(files).sort()[0];
+    if (first) openFile(first); else showEmpty();
+
+    $('btnNewFile').addEventListener('click', openCreateModal);
+    $('btnRun').addEventListener('click', runCode);
+    $('btnParty').addEventListener('click', toggleParty);
+    $('btnPublish').addEventListener('click', publishFile);
+    $('btnGlory').addEventListener('click', openGlory);
+    $('modalCancel').addEventListener('click', closeCreateModal);
+    $('modalCreate').addEventListener('click', createFile);
+    $('gloryClose').addEventListener('click', closeGlory);
+    $('fileNameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') createFile(); });
+    $('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeCreateModal(); });
+    $('gloryModal').addEventListener('click', (e) => { if (e.target === $('gloryModal')) closeGlory(); });
+
+    $('btnCloseOut').addEventListener('click', closeOutputPanel);
+    $('btnMaxOut').addEventListener('click', toggleMaxOutput);
+    $('btnClearOut').addEventListener('click', clearOutput);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { closeCreateModal(); closeGlory(); }
+    });
+
+    setTimeout(() => { ensurePyodideScript().catch(() => {}); }, 1500);
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
